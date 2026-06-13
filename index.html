@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评委打分系统 — 舞蹈 · 朗诵</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --border: #334155;
+    --accent: #f59e0b;
+    --accent2: #8b5cf6;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0,0,0,.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+  /* ===== Header ===== */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 4px;
+    display: inline-flex;
+  }
+  .tab {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: .95rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--muted);
+    transition: all .2s;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: #000;
+  }
+  .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+
+  /* ===== Main layout ===== */
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* ===== Left: contestant list ===== */
+  .side-panel {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+  }
+  .side-panel h3 {
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .add-row input {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #0f172a;
+    color: var(--text);
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .add-row input:focus { border-color: var(--accent); }
+  .add-row button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: .9rem;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .add-row button:hover { filter: brightness(1.1); }
+
+  .contestant-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .contestant-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+    border: 1px solid transparent;
+  }
+  .contestant-item:hover { background: rgba(255,255,255,.04); }
+  .contestant-item.selected {
+    background: rgba(245,158,11,.12);
+    border-color: var(--accent);
+  }
+
+  .contestant-item .name {
+    font-weight: 600;
+    font-size: .9rem;
+  }
+  .contestant-item .score-preview {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .contestant-item .score-preview.has-score {
+    color: var(--green);
+    font-weight: 700;
+  }
+  .contestant-item .del-btn {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: .8rem;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .contestant-item .del-btn:hover { background: rgba(239,68,68,.2); color: var(--red); }
+
+  .empty-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: .8rem;
+    padding: 30px 0;
+  }
+
+  /* ===== Right: judge scoring ===== */
+  .score-panel {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    min-height: 300px;
+  }
+  .score-panel .placeholder {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 0;
+    font-size: .95rem;
+  }
+  .score-panel .selected-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .score-panel .selected-type {
+    font-size: .8rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .score-panel .final-score {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .score-panel .final-score .formula {
+    font-size: .7rem;
+    color: var(--muted);
+    font-weight: 400;
+    display: block;
+  }
+
+  .judges-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .judge-box {
+    text-align: center;
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 12px 8px;
+    border: 2px solid transparent;
+    transition: all .2s;
+  }
+  .judge-box.scored { border-color: var(--accent); }
+  .judge-box .judge-label {
+    font-size: .7rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .judge-box input {
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    color: var(--text);
+    outline: none;
+    padding: 4px 0;
+    transition: border-color .2s;
+  }
+  .judge-box input:focus { border-color: var(--accent); }
+  .judge-box input.has-val { color: var(--accent); border-color: var(--accent); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 600;
+    transition: all .15s;
+  }
+  .btn:hover { background: rgba(255,255,255,.06); }
+  .btn.accent { background: var(--accent); color: #000; border: none; }
+  .btn.accent:hover { filter: brightness(1.1); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: rgba(239,68,68,.15); }
+
+  /* ===== Ranking table ===== */
+  .ranking-section {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .ranking-section h3 {
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ranking-section h3 .badge {
+    background: var(--accent);
+    color: #000;
+    font-size: .7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+  }
+  th, td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    color: var(--muted);
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  td.name-col { text-align: left; font-weight: 600; }
+  .rank-badge {
+    display: inline-block;
+    width: 28px; height: 28px;
+    line-height: 28px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: .85rem;
+  }
+  .rank-1 { background: #f59e0b; color: #000; }
+  .rank-2 { background: #94a3b8; color: #000; }
+  .rank-3 { background: #b45309; color: #fff; }
+  .rank-other { color: var(--muted); }
+
+  .score-breakdown {
+    font-size: .75rem;
+    color: var(--muted);
+  }
+  .score-breakdown .dropped { text-decoration: line-through; color: var(--red); opacity: .6; }
+  .score-breakdown .kept { color: var(--green); }
+
+  .no-data {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+    font-size: .85rem;
+  }
+
+  /* ===== Footer ===== */
+  .footer-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 700px) {
+    .main { grid-template-columns: 1fr; }
+    .side-panel { max-height: 250px; }
+    .judges-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .judge-box input { font-size: 1.2rem; }
+    .judge-box { padding: 8px 4px; }
+    table { font-size: .75rem; }
+    th, td { padding: 6px 4px; }
+  }
+  @media (max-width: 400px) {
+    .judges-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <h1>🏆 评委打分系统</h1>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-type="dance">💃 舞蹈比赛</button>
+      <button class="tab" data-type="recite">🎤 朗诵比赛</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Left: contestant list -->
+    <div class="side-panel">
+      <h3>👥 选手列表</h3>
+      <div class="add-row">
+        <input type="text" id="newName" placeholder="输入选手姓名" maxlength="12">
+        <button id="btnAdd">+ 添加</button>
+      </div>
+      <div class="contestant-list" id="contestantList">
+        <div class="empty-hint">暂无选手，请先添加</div>
+      </div>
+    </div>
+
+    <!-- Right: judge scoring -->
+    <div class="score-panel" id="scorePanel">
+      <div class="placeholder">👈 选择左侧选手进行打分</div>
+    </div>
+  </div>
+
+  <!-- Ranking -->
+  <div class="ranking-section">
+    <h3>📊 排名 <span class="badge" id="badgeCount">0 人</span></h3>
+    <div id="rankingTable">
+      <div class="no-data">暂无成绩数据</div>
+    </div>
+  </div>
+
+  <!-- Footer actions -->
+  <div class="footer-bar">
+    <button class="btn" id="btnExport">📋 导出成绩单</button>
+    <button class="btn" id="btnClearAll">🗑️ 清空所有数据</button>
+    <button class="btn" id="btnImport">📥 导入数据</button>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+</div>
+
+<script>
+// ===== State =====
+const STORAGE_KEY = 'judge_scoring_data_v2';
+
+let currentType = 'dance'; // 'dance' | 'recite'
+let selectedId = null;
+
+// Structure: { dance: { contestants: { id: { name, scores: [null,null,null,null,null] } } }, recite: {...} }
+let data = {
+  dance: { contestants: {} },
+  recite: { contestants: {} },
+};
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// ===== Persistence =====
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try {
+    const saved = JSON.parse(raw);
+    if (saved.dance) data.dance = saved.dance;
+    if (saved.recite) data.recite = saved.recite;
+  } catch(e) {}
+}
+
+// ===== Helpers =====
+function getContestants() {
+  return Object.entries(data[currentType].contestants)
+    .map(([id, c]) => ({ id, ...c }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+}
+
+function calcFinal(scores) {
+  const filled = scores.filter(s => s !== null && s !== undefined && !isNaN(s));
+  if (filled.length < 3) return null; // Need at least 3 scores
+  const sorted = [...filled].sort((a, b) => a - b);
+  const kept = sorted.slice(1, -1); // Remove min and max
+  if (kept.length === 0) {
+    // If just 3 scores, removing min/max leaves 1 — that's correct
+    // If 4 scores, removing min/max leaves 2
+    // If 5 scores, removing min/max leaves 3
+    const mid = sorted.slice(1, Math.max(1, sorted.length - 1));
+    const avg = mid.reduce((a, b) => a + b, 0) / mid.length;
+    return { avg: Math.round(avg * 100) / 100, kept: mid, dropped: [sorted[0], sorted[sorted.length-1]], all: sorted };
+  }
+  const avg = kept.reduce((a, b) => a + b, 0) / kept.length;
+  return { avg: Math.round(avg * 100) / 100, kept, dropped: [sorted[0], sorted[sorted.length-1]], all: sorted };
+}
+
+function getRanked() {
+  const list = [];
+  Object.entries(data[currentType].contestants).forEach(([id, c]) => {
+    const result = calcFinal(c.scores);
+    if (result) list.push({ id, name: c.name, scores: c.scores, result });
+  });
+  list.sort((a, b) => b.result.avg - a.result.avg);
+  return list;
+}
+
+// ===== Render =====
+function renderContestantList() {
+  const container = document.getElementById('contestantList');
+  const list = getContestants();
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-hint">暂无选手，请先添加</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(c => {
+    const result = calcFinal(c.scores);
+    const scoreText = result ? `${result.avg.toFixed(2)} 分` : '未完成';
+    const scoreClass = result ? 'has-score' : '';
+    const selClass = c.id === selectedId ? ' selected' : '';
+    return `
+      <div class="contestant-item${selClass}" data-id="${c.id}">
+        <span>
+          <span class="name">${escHtml(c.name)}</span>
+          <span class="score-preview ${scoreClass}"> · ${scoreText}</span>
+        </span>
+        <button class="del-btn" data-del="${c.id}" title="删除">✕</button>
+      </div>`;
+  }).join('');
+
+  // Click handlers
+  container.querySelectorAll('.contestant-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.del-btn')) return;
+      selectContestant(el.dataset.id);
+    });
+  });
+  container.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteContestant(btn.dataset.del);
+    });
+  });
+}
+
+function renderScorePanel() {
+  const panel = document.getElementById('scorePanel');
+  if (!selectedId) {
+    panel.innerHTML = '<div class="placeholder">👈 选择左侧选手进行打分</div>';
+    return;
+  }
+
+  const c = data[currentType].contestants[selectedId];
+  if (!c) {
+    selectedId = null;
+    renderScorePanel();
+    return;
+  }
+
+  const typeLabel = currentType === 'dance' ? '💃 舞蹈比赛' : '🎤 朗诵比赛';
+  const result = calcFinal(c.scores);
+
+  panel.innerHTML = `
+    <div class="selected-name">${escHtml(c.name)}</div>
+    <div class="selected-type">${typeLabel}</div>
+    ${result ? `<div class="final-score">
+      ${result.avg.toFixed(2)}<span class="formula">最终得分（去掉最高 ${result.dropped[1]} 分、最低 ${result.dropped[0]} 分）</span>
+    </div>` : '<div class="final-score" style="color:var(--muted);font-size:1rem;">至少需要3位评委打分</div>'}
+    <div class="judges-grid">
+      ${[1,2,3,4,5].map(i => {
+        const val = c.scores[i-1];
+        const hasVal = val !== null && val !== undefined;
+        return `
+          <div class="judge-box${hasVal ? ' scored' : ''}">
+            <div class="judge-label">评委 ${i}</div>
+            <input type="number"
+                   id="judge${i}"
+                   value="${hasVal ? val : ''}"
+                   placeholder="-"
+                   min="0" max="100" step="0.1"
+                   class="${hasVal ? 'has-val' : ''}"
+                   data-judge="${i}">
+            ${hasVal ? `<div style="font-size:.65rem;color:var(--muted);margin-top:2px;">${val}</div>` : ''}
+          </div>`;
+      }).join('')}
+    </div>
+    <div class="btn-row">
+      <button class="btn accent" id="btnQuick100">⚡ 满分 (100)</button>
+      <button class="btn" id="btnClearScores">清空分数</button>
+    </div>
+  `;
+
+  // Judge input handlers
+  panel.querySelectorAll('input[data-judge]').forEach(input => {
+    input.addEventListener('input', () => {
+      const idx = parseInt(input.dataset.judge) - 1;
+      const val = parseFloat(input.value);
+      if (!isNaN(val) && val >= 0 && val <= 100) {
+        c.scores[idx] = Math.round(val * 10) / 10;
+      } else if (input.value === '' || input.value === '-') {
+        c.scores[idx] = null;
+      }
+      saveData();
+      renderAll(); // Re-render everything to update ranking
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const nextIdx = parseInt(input.dataset.judge);
+        if (nextIdx < 5) {
+          const nextInput = panel.querySelector(`#judge${nextIdx + 1}`);
+          if (nextInput) nextInput.focus();
+        }
+      }
+    });
+  });
+
+  // Quick 100 button
+  document.getElementById('btnQuick100')?.addEventListener('click', () => {
+    c.scores = [100, 100, 100, 100, 100];
+    saveData();
+    renderAll();
+  });
+
+  // Clear scores
+  document.getElementById('btnClearScores')?.addEventListener('click', () => {
+    c.scores = [null, null, null, null, null];
+    saveData();
+    renderAll();
+  });
+}
+
+function renderRanking() {
+  const container = document.getElementById('rankingTable');
+  const badge = document.getElementById('badgeCount');
+  const ranked = getRanked();
+
+  badge.textContent = `${ranked.length} 人`;
+
+  if (ranked.length === 0) {
+    container.innerHTML = '<div class="no-data">暂无成绩数据 — 至少需要3位评委为选手打分</div>';
+    return;
+  }
+
+  // Count how many contestants have at least partial scores (for total count)
+  const totalWithScores = Object.values(data[currentType].contestants)
+    .filter(c => c.scores.some(s => s !== null && s !== undefined)).length;
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>排名</th>
+          <th>选手</th>
+          <th>评委1</th>
+          <th>评委2</th>
+          <th>评委3</th>
+          <th>评委4</th>
+          <th>评委5</th>
+          <th>最终得分</th>
+          <th>明细</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${ranked.map((r, i) => {
+          const rank = i + 1;
+          const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+          const keptSet = new Set(r.result.kept);
+          const droppedSet = new Set(r.result.dropped);
+          return `
+            <tr>
+              <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+              <td class="name-col">${escHtml(r.name)}</td>
+              ${r.scores.map((s, idx) => {
+                const val = s !== null && s !== undefined ? s.toFixed(1) : '-';
+                const isKept = keptSet.has(s);
+                const isDropped = droppedSet.has(s);
+                let cls = '';
+                if (isDropped) cls = 'dropped';
+                else if (isKept && r.result.all.length >= 3) cls = 'kept';
+                return `<td class="score-breakdown"><span class="${cls}">${val}</span></td>`;
+              }).join('')}
+              <td style="font-weight:700;color:var(--accent);font-size:1.05rem;">${r.result.avg.toFixed(2)}</td>
+              <td class="score-breakdown" style="font-size:.7rem;">
+                去掉 ${r.result.dropped.map(d => d.toFixed(1)).join('、')}<br>
+                ${r.result.kept.map(k => k.toFixed(1)).join(' + ')} / ${r.result.kept.length} = ${r.result.avg.toFixed(2)}
+              </td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderAll() {
+  renderContestantList();
+  renderScorePanel();
+  renderRanking();
+}
+
+function escHtml(str) {
+  const el = document.createElement('span');
+  el.textContent = str;
+  return el.innerHTML;
+}
+
+// ===== Actions =====
+function selectContestant(id) {
+  selectedId = id;
+  renderAll();
+  // Focus first empty judge input
+  setTimeout(() => {
+    const firstEmpty = document.querySelector('.score-panel input[data-judge]:not(.has-val)');
+    if (firstEmpty) firstEmpty.focus();
+  }, 100);
+}
+
+function addContestant() {
+  const input = document.getElementById('newName');
+  const name = input.value.trim();
+  if (!name) return;
+  const id = genId();
+  data[currentType].contestants[id] = {
+    name,
+    scores: [null, null, null, null, null],
+  };
+  input.value = '';
+  selectedId = id;
+  saveData();
+  renderAll();
+  input.focus();
+}
+
+function deleteContestant(id) {
+  if (!confirm(`确定删除选手「${data[currentType].contestants[id]?.name}」？`)) return;
+  delete data[currentType].contestants[id];
+  if (selectedId === id) selectedId = null;
+  saveData();
+  renderAll();
+}
+
+function clearAll() {
+  if (!confirm('确定清空当前比赛所有选手和成绩？此操作不可恢复！')) return;
+  data[currentType].contestants = {};
+  selectedId = null;
+  saveData();
+  renderAll();
+}
+
+function exportData() {
+  const ranked = getRanked();
+  if (ranked.length === 0) { alert('当前没有可导出的成绩数据'); return; }
+
+  const typeLabel = currentType === 'dance' ? '舞蹈比赛' : '朗诵比赛';
+  let text = `══════════════════════════\n`;
+  text += `  🏆 ${typeLabel} — 成绩排名\n`;
+  text += `  导出时间：${new Date().toLocaleString()}\n`;
+  text += `══════════════════════════\n\n`;
+
+  ranked.forEach((r, i) => {
+    text += `${i+1}. ${r.name} — ${r.result.avg.toFixed(2)} 分\n`;
+    text += `   评委打分：${r.scores.map(s => s != null ? s.toFixed(1) : '-').join(' | ')}\n`;
+    text += `   计分：去掉最高 ${r.result.dropped[1].toFixed(1)}、最低 ${r.result.dropped[0].toFixed(1)}，取 ${r.result.kept.map(k => k.toFixed(1)).join('、')} 平均\n\n`;
+  });
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(text).then(() => {
+    alert('✅ 成绩单已复制到剪贴板！可粘贴到微信/文档中。');
+  }).catch(() => {
+    // Fallback: download as file
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${typeLabel}_成绩单.txt`;
+    a.click();
+  });
+}
+
+function importData() {
+  document.getElementById('importFile').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (imported.dance && imported.recite) {
+        if (!confirm('导入将覆盖当前所有数据，确定继续？')) return;
+        data = imported;
+        selectedId = null;
+        saveData();
+        renderAll();
+        alert('✅ 数据导入成功！');
+      } else {
+        alert('❌ 文件格式不正确');
+      }
+    } catch(err) {
+      alert('❌ 无法解析文件，请确认是 JSON 格式');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ===== Event listeners =====
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  currentType = tab.dataset.type;
+  selectedId = null;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  renderAll();
+});
+
+document.getElementById('btnAdd').addEventListener('click', addContestant);
+document.getElementById('newName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addContestant();
+});
+
+document.getElementById('btnExport').addEventListener('click', exportData);
+document.getElementById('btnClearAll').addEventListener('click', clearAll);
+document.getElementById('btnImport').addEventListener('click', importData);
+document.getElementById('importFile').addEventListener('change', handleImport);
+
+// Click outside side panel to deselect
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.contestant-item') && !e.target.closest('.side-panel button')) {
+    // Don't deselect — keep selection for scoring
+  }
+});
+
+// ===== Keyboard: Ctrl+S to export =====
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    exportData();
+  }
+});
+
+// ===== Init =====
+loadData();
+renderAll();
+</script>
+
+</body>
+</html>
