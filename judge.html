@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>评委打分</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --border: #334155;
+    --accent: #f59e0b; --text: #f1f5f9; --muted: #94a3b8;
+    --green: #22c55e; --red: #ef4444; --radius: 14px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  }
+  .app { width: 100%; max-width: 440px; padding: 16px; }
+
+  /* Entry screen */
+  .entry {
+    background: var(--panel); border-radius: var(--radius); padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.35); text-align: center;
+  }
+  .entry h2 { font-size: 1.3rem; margin-bottom: 4px; }
+  .entry .sub { font-size: .8rem; color: var(--muted); margin-bottom: 18px; }
+  .entry label {
+    display: block; font-size: .75rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 4px; text-align: left;
+  }
+  .entry input {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+    background: #0f172a; color: var(--text); font-size: 1.1rem; text-align: center;
+    outline: none; margin-bottom: 12px; letter-spacing: 4px; font-weight: 700;
+  }
+  .entry input:focus { border-color: var(--accent); }
+  .judge-select {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px;
+  }
+  .judge-opt {
+    padding: 12px; border-radius: 10px; border: 2px solid var(--border);
+    background: transparent; color: var(--text); font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+  }
+  .judge-opt.selected { border-color: var(--accent); background: rgba(245,158,11,.15); color: var(--accent); }
+  .judge-opt:hover { border-color: rgba(255,255,255,.3); }
+  .entry .btn-go {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: var(--accent); color: #000; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; margin-top: 4px;
+  }
+  .entry .btn-go:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Scoring screen */
+  .scoring { display: none; }
+  .scoring.active { display: block; }
+
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; font-size: .8rem; color: var(--muted);
+  }
+  .top-bar .judge-badge {
+    background: var(--accent); color: #000; padding: 4px 10px;
+    border-radius: 20px; font-weight: 700; font-size: .75rem;
+  }
+  .top-bar .room-badge {
+    background: var(--panel); padding: 4px 10px; border-radius: 20px;
+  }
+  .status-line {
+    text-align: center; font-size: .75rem; color: var(--muted); margin-bottom: 10px;
+  }
+  .status-line.on { color: var(--green); }
+
+  .contestant-card {
+    background: var(--panel); border-radius: var(--radius); padding: 20px;
+    text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,.35); margin-bottom: 10px;
+  }
+  .contestant-card .waiting {
+    color: var(--muted); font-size: .9rem; padding: 30px 0;
+  }
+  .contestant-card .waiting .icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+  .contestant-card .c-name {
+    font-size: 1.6rem; font-weight: 700; margin-bottom: 4px;
+  }
+  .contestant-card .c-type {
+    font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 14px;
+  }
+  .contestant-card .my-score-label {
+    font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;
+  }
+  .contestant-card .my-score-display {
+    font-size: 4rem; font-weight: 800; color: var(--accent); line-height: 1;
+  }
+  .contestant-card .my-score-display.empty { color: var(--border); font-size: 2rem; }
+
+  .score-input-area {
+    background: var(--panel); border-radius: var(--radius); padding: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.35); text-align: center;
+  }
+  .score-input-area .label {
+    font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .score-input-row {
+    display: flex; gap: 8px; align-items: center; justify-content: center;
+  }
+  .score-input-row input {
+    width: 140px; text-align: center; font-size: 2.5rem; font-weight: 700;
+    padding: 12px; border-radius: 12px; border: 2px solid var(--border);
+    background: #0f172a; color: var(--accent); outline: none;
+  }
+  .score-input-row input:focus { border-color: var(--accent); }
+  .score-input-row .btn-submit {
+    padding: 16px 24px; border-radius: 12px; border: none;
+    background: var(--green); color: #000; font-size: 1rem; font-weight: 700;
+    cursor: pointer;
+  }
+  .score-input-row .btn-submit:active { filter: brightness(.9); }
+
+  .quick-scores {
+    display: flex; gap: 6px; justify-content: center; margin-top: 10px; flex-wrap: wrap;
+  }
+  .quick-btn {
+    padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); font-size: .9rem; font-weight: 600;
+    cursor: pointer; transition: all .1s;
+  }
+  .quick-btn:active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  /* Score entered feedback */
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: #000; padding: 12px 24px;
+    border-radius: 30px; font-weight: 700; font-size: .9rem;
+    z-index: 100; opacity: 0; transition: opacity .3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* History */
+  .history-section {
+    margin-top: 10px; background: var(--panel); border-radius: var(--radius);
+    padding: 14px; box-shadow: 0 4px 24px rgba(0,0,0,.35);
+  }
+  .history-section h3 {
+    font-size: .7rem; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .history-list { max-height: 200px; overflow-y: auto; }
+  .history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .85rem;
+  }
+  .history-item .h-name { font-weight: 600; }
+  .history-item .h-score { font-weight: 700; color: var(--accent); }
+  .history-item .h-empty { color: var(--muted); font-size: .75rem; }
+
+  .reconnect-overlay {
+    position: fixed; inset:0; background: rgba(0,0,0,.8);
+    display: flex; align-items: center; justify-content: center; z-index: 200;
+    pointer-events: none; opacity: 0; transition: opacity .3s;
+  }
+  .reconnect-overlay.show { opacity:1; pointer-events:auto; }
+  .reconnect-overlay div {
+    background: var(--panel); padding: 24px; border-radius: var(--radius); text-align: center;
+  }
+
+  @media (max-width: 380px) {
+    .contestant-card .my-score-display { font-size: 3rem; }
+    .score-input-row input { width: 110px; font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Entry -->
+  <div class="entry" id="entryScreen">
+    <h2>🎯 评委打分</h2>
+    <div class="sub">输入房间号，选择你的评委编号</div>
+    <label>房间号</label>
+    <input type="text" id="entryRoomCode" placeholder="输入4位房间号" maxlength="4" autocomplete="off">
+    <label>你的评委编号</label>
+    <div class="judge-select" id="judgeSelect">
+      <button class="judge-opt" data-j="1">1</button>
+      <button class="judge-opt" data-j="2">2</button>
+      <button class="judge-opt" data-j="3">3</button>
+      <button class="judge-opt" data-j="4">4</button>
+      <button class="judge-opt" data-j="5">5</button>
+    </div>
+    <button class="btn-go" id="btnEnter" disabled>进入打分</button>
+  </div>
+
+  <!-- Scoring -->
+  <div class="scoring" id="scoringScreen">
+    <div class="top-bar">
+      <span class="judge-badge" id="judgeBadge">评委 1</span>
+      <span class="room-badge" id="roomBadge">房间 ----</span>
+      <button style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:20px;font-size:.7rem;cursor:pointer;" onclick="goBack()">退出</button>
+    </div>
+
+    <div class="status-line" id="statusLine">连接中...</div>
+
+    <div class="contestant-card" id="contestantCard">
+      <div class="waiting"><span class="icon">⏳</span>等待管理员选择选手...</div>
+    </div>
+
+    <div class="score-input-area" id="scoreInputArea">
+      <div class="label">我的打分</div>
+      <div class="score-input-row">
+        <input type="number" id="scoreInput" placeholder="0-100" min="0" max="100" step="0.1" inputmode="decimal">
+        <button class="btn-submit" id="btnSubmit">确认</button>
+      </div>
+      <div class="quick-scores">
+        <button class="quick-btn" data-s="60">60</button>
+        <button class="quick-btn" data-s="70">70</button>
+        <button class="quick-btn" data-s="75">75</button>
+        <button class="quick-btn" data-s="80">80</button>
+        <button class="quick-btn" data-s="85">85</button>
+        <button class="quick-btn" data-s="90">90</button>
+        <button class="quick-btn" data-s="95">95</button>
+        <button class="quick-btn" data-s="100">100</button>
+      </div>
+    </div>
+
+    <div class="history-section">
+      <h3>📋 我的打分记录</h3>
+      <div class="history-list" id="historyList">
+        <div style="color:var(--muted);font-size:.75rem;text-align:center;padding:10px;">暂无记录</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Reconnect overlay -->
+  <div class="reconnect-overlay" id="reconnectOverlay">
+    <div>
+      <div style="font-size:2rem;margin-bottom:8px;">🔌</div>
+      <div style="font-weight:700;margin-bottom:4px;">连接断开</div>
+      <div style="font-size:.8rem;color:var(--muted);">正在重新连接...</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "YOUR_APP_ID"
+};
+// =========================================================
+
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getDatabase, ref, onValue, set, get, update } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+import { onDisconnected } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// State
+let roomCode = null;
+let judgeNum = null; // 1-5
+let currentContestantId = null;
+let currentContestantName = null;
+let allContestants = {};
+let currentType = 'dance';
+
+// ==================== Entry ====================
+const $entry = document.getElementById('entryScreen');
+const $scoring = document.getElementById('scoringScreen');
+let selectedJudge = null;
+
+document.querySelectorAll('.judge-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.judge-opt').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedJudge = parseInt(btn.dataset.j);
+    updateEnterBtn();
+  });
+});
+
+document.getElementById('entryRoomCode').addEventListener('input', updateEnterBtn);
+
+function updateEnterBtn() {
+  const code = document.getElementById('entryRoomCode').value.trim();
+  document.getElementById('btnEnter').disabled = !(code.length >= 4 && selectedJudge);
+}
+
+document.getElementById('btnEnter').addEventListener('click', enterScoring);
+document.getElementById('entryRoomCode').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !document.getElementById('btnEnter').disabled) enterScoring();
+});
+
+function enterScoring() {
+  const code = document.getElementById('entryRoomCode').value.trim().toUpperCase();
+  if (code.length < 4 || !selectedJudge) return;
+
+  const roomRef = ref(db, `rooms/${code}`);
+  get(roomRef).then(snap => {
+    if (!snap.exists()) { alert('房间不存在！请检查房间号'); return; }
+    roomCode = code;
+    judgeNum = selectedJudge;
+    document.getElementById('judgeBadge').textContent = `评委 ${judgeNum}`;
+    document.getElementById('roomBadge').textContent = `房间 ${roomCode}`;
+    $entry.style.display = 'none';
+    $scoring.classList.add('active');
+    document.getElementById('statusLine').textContent = '已连接 ✅';
+    document.getElementById('statusLine').classList.add('on');
+
+    // Setup presence
+    setupPresence();
+    // Listen to room data
+    listenRoom();
+  }).catch(() => {
+    alert('连接失败，请检查网络');
+  });
+}
+
+function goBack() {
+  roomCode = null;
+  judgeNum = null;
+  currentContestantId = null;
+  $entry.style.display = '';
+  $scoring.classList.remove('active');
+}
+
+// ==================== Presence ====================
+function setupPresence() {
+  if (!roomCode || !judgeNum) return;
+  const presenceRef = ref(db, `rooms/${roomCode}/judgePresence/judge${judgeNum}`);
+  // Update presence every 30s
+  const updatePresence = () => {
+    set(presenceRef, Date.now());
+  };
+  updatePresence();
+  setInterval(updatePresence, 30000);
+
+  // Set presence to null on disconnect
+  const disconnectRef = ref(db, `rooms/${roomCode}/judgePresence/judge${judgeNum}`);
+  onDisconnect(disconnectRef).set(null);
+}
+
+// ==================== Listeners ====================
+function listenRoom() {
+  if (!roomCode) return;
+
+  // Listen to type
+  onValue(ref(db, `rooms/${roomCode}/type`), snap => {
+    if (snap.exists()) currentType = snap.val();
+  });
+
+  // Listen to current contestant
+  onValue(ref(db, `rooms/${roomCode}/currentContestantId`), snap => {
+    currentContestantId = snap.val() || null;
+    renderCurrentContestant();
+  });
+
+  // Listen to all contestants
+  onValue(ref(db, `rooms/${roomCode}/contestants`), snap => {
+    allContestants = snap.val() || {};
+    renderCurrentContestant();
+    renderHistory();
+  });
+
+  // Connection status
+  const connectedRef = ref(db, '.info/connected');
+  onValue(connectedRef, snap => {
+    const connected = snap.val() === true;
+    document.getElementById('statusLine').textContent = connected ? '已连接 ✅' : '连接断开，重连中...';
+    document.getElementById('statusLine').classList.toggle('on', connected);
+    document.getElementById('reconnectOverlay').classList.toggle('show', !connected && roomCode !== null);
+  });
+}
+
+// ==================== Render ====================
+function renderCurrentContestant() {
+  const card = document.getElementById('contestantCard');
+  if (!currentContestantId || !allContestants[currentContestantId]) {
+    card.innerHTML = '<div class="waiting"><span class="icon">⏳</span>等待管理员选择选手...</div>';
+    document.getElementById('scoreInputArea').style.opacity = '0.4';
+    document.getElementById('btnSubmit').disabled = true;
+    return;
+  }
+
+  const c = allContestants[currentContestantId];
+  currentContestantName = c.name;
+  const myKey = `judge${judgeNum}`;
+  const myScore = (c.scores && c.scores[myKey]) || null;
+  const typeLabel = currentType === 'dance' ? '💃 舞蹈比赛' : '🎤 朗诵比赛';
+  const hasScore = myScore !== null && myScore !== undefined;
+
+  card.innerHTML = `
+    <div class="c-name">${esc(c.name)}</div>
+    <div class="c-type">${typeLabel}</div>
+    <div class="my-score-label">我的打分</div>
+    <div class="my-score-display${hasScore ? '' : ' empty'}">${hasScore ? myScore.toFixed(1) : '未打分'}</div>
+  `;
+
+  document.getElementById('scoreInputArea').style.opacity = '1';
+  document.getElementById('btnSubmit').disabled = false;
+  document.getElementById('scoreInput').value = hasScore ? myScore : '';
+  document.getElementById('scoreInput').focus();
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyList');
+  const myKey = `judge${judgeNum}`;
+  const entries = Object.entries(allContestants)
+    .filter(([id]) => {
+      const c = allContestants[id];
+      return c && c.scores && c.scores[myKey] !== null && c.scores[myKey] !== undefined;
+    })
+    .sort((a, b) => b[1].createdAt - a[1].createdAt);
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:.75rem;text-align:center;padding:10px;">暂无记录</div>';
+    return;
+  }
+
+  container.innerHTML = entries.map(([id, c]) => {
+    const isCurrent = id === currentContestantId;
+    return `
+      <div class="history-item" style="${isCurrent ? 'background:rgba(245,158,11,.08);border-radius:6px;padding:6px 8px;' : ''}">
+        <span class="h-name">${isCurrent ? '▶ ' : ''}${esc(c.name)}</span>
+        <span class="h-score">${c.scores[myKey].toFixed(1)} 分</span>
+      </div>`;
+  }).join('');
+}
+
+// ==================== Score submission ====================
+function submitScore() {
+  if (!roomCode || !judgeNum || !currentContestantId) return;
+
+  const input = document.getElementById('scoreInput');
+  const raw = input.value.trim();
+  if (raw === '') { alert('请输入分数'); return; }
+
+  let val = parseFloat(raw);
+  if (isNaN(val)) { alert('请输入有效数字'); return; }
+  if (val < 0) val = 0;
+  if (val > 100) val = 100;
+  val = Math.round(val * 10) / 10;
+
+  const scoreRef = ref(db, `rooms/${roomCode}/contestants/${currentContestantId}/scores/judge${judgeNum}`);
+  set(scoreRef, val).then(() => {
+    showToast(`✅ ${val.toFixed(1)} 分 已提交`);
+    input.value = '';
+    input.focus();
+  }).catch(() => {
+    showToast('❌ 提交失败，请重试');
+  });
+}
+
+document.getElementById('btnSubmit').addEventListener('click', submitScore);
+document.getElementById('scoreInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitScore();
+});
+
+// Quick score buttons
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('scoreInput').value = btn.dataset.s;
+    submitScore();
+  });
+});
+
+// ==================== Toast ====================
+let toastTimer;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ==================== Auto-fill from URL ====================
+const params = new URLSearchParams(window.location.search);
+const urlRoom = params.get('room');
+const urlJudge = params.get('judge');
+if (urlRoom) {
+  document.getElementById('entryRoomCode').value = urlRoom;
+}
+if (urlJudge && ['1','2','3','4','5'].includes(urlJudge)) {
+  selectedJudge = parseInt(urlJudge);
+  document.querySelectorAll('.judge-opt').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.j) === selectedJudge);
+  });
+}
+updateEnterBtn();
+// Auto-enter if both provided
+if (urlRoom && urlJudge && ['1','2','3','4','5'].includes(urlJudge)) {
+  setTimeout(enterScoring, 600);
+}
+
+function esc(s) {
+  const el = document.createElement('span');
+  el.textContent = s;
+  return el.innerHTML;
+}
+</script>
+</body>
+</html>

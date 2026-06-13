@@ -3,375 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>评委打分系统 — 舞蹈 · 朗诵</title>
+<title>评委打分系统 · 管理端</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --border: #334155;
-    --accent: #f59e0b;
-    --accent2: #8b5cf6;
-    --text: #f1f5f9;
-    --muted: #94a3b8;
-    --green: #22c55e;
-    --red: #ef4444;
-    --blue: #3b82f6;
-    --radius: 14px;
-    --shadow: 0 4px 24px rgba(0,0,0,.35);
+    --bg: #0f172a; --panel: #1e293b; --border: #334155;
+    --accent: #f59e0b; --text: #f1f5f9; --muted: #94a3b8;
+    --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
+    --radius: 14px; --shadow: 0 4px 24px rgba(0,0,0,.35);
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; }
   body {
-    font-family: -apple-system, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
+    font-family: -apple-system,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
     -webkit-tap-highlight-color: transparent;
   }
+  .app { max-width: 1000px; margin:0 auto; padding: 14px; }
 
-  .app { max-width: 960px; margin: 0 auto; padding: 16px; }
+  /* Header */
+  .header { text-align: center; margin-bottom: 16px; }
+  .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+  .room-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--panel); border-radius: 20px; padding: 6px 14px;
+    font-size: .85rem; color: var(--muted);
+  }
+  .room-badge code { color: var(--accent); font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; }
+  .room-badge button {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 6px; cursor: pointer; font-size: .7rem; padding: 2px 8px;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    background: var(--red); animation: pulse 1.5s infinite;
+  }
+  .status-dot.online { background: var(--green); }
 
-  /* ===== Header ===== */
-  .header {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  .header h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-  }
-  .tabs {
-    display: flex;
-    gap: 4px;
-    justify-content: center;
-    background: var(--panel);
-    border-radius: 12px;
-    padding: 4px;
-    display: inline-flex;
-  }
+  /* Tabs */
+  .tabs { display: inline-flex; gap: 4px; background: var(--panel); border-radius: 12px; padding: 4px; margin-bottom: 14px; }
   .tab {
-    padding: 10px 24px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    font-size: .95rem;
-    font-weight: 600;
-    background: transparent;
-    color: var(--muted);
-    transition: all .2s;
+    padding: 9px 20px; border-radius: 10px; border: none; cursor: pointer;
+    font-size: .9rem; font-weight: 600; background: transparent; color: var(--muted); transition: all .2s;
   }
-  .tab.active {
-    background: var(--accent);
-    color: #000;
-  }
+  .tab.active { background: var(--accent); color: #000; }
   .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
 
-  /* ===== Main layout ===== */
-  .main {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 14px;
-    margin-bottom: 14px;
-  }
+  /* Main layout */
+  .main { display: grid; grid-template-columns: 260px 1fr; gap: 12px; margin-bottom: 12px; }
 
-  /* ===== Left: contestant list ===== */
+  /* Side panel */
   .side-panel {
-    background: var(--panel);
-    border-radius: var(--radius);
-    padding: 16px;
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-    max-height: 500px;
+    background: var(--panel); border-radius: var(--radius); padding: 14px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; max-height: 480px;
   }
-  .side-panel h3 {
-    font-size: .85rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-  .add-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
+  .side-panel h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+  .add-row { display: flex; gap: 6px; margin-bottom: 10px; }
   .add-row input {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: #0f172a;
-    color: var(--text);
-    font-size: .9rem;
-    outline: none;
-    transition: border-color .2s;
+    flex:1; padding: 9px 10px; border-radius: 8px; border:1px solid var(--border);
+    background: #0f172a; color: var(--text); font-size: .85rem; outline: none;
   }
   .add-row input:focus { border-color: var(--accent); }
   .add-row button {
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: none;
-    background: var(--accent);
-    color: #000;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: .9rem;
-    white-space: nowrap;
-    transition: all .15s;
+    padding: 9px 14px; border-radius: 8px; border: none; background: var(--accent);
+    color: #000; font-weight: 700; cursor: pointer; font-size: .85rem; white-space: nowrap;
   }
   .add-row button:hover { filter: brightness(1.1); }
-
-  .contestant-list {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+  .contestant-list { flex:1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
   .contestant-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all .15s;
-    border: 1px solid transparent;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 10px; border-radius: 8px; cursor: pointer; transition: all .15s;
+    border: 1px solid transparent; font-size: .85rem;
   }
   .contestant-item:hover { background: rgba(255,255,255,.04); }
-  .contestant-item.selected {
-    background: rgba(245,158,11,.12);
-    border-color: var(--accent);
-  }
-
-  .contestant-item .name {
-    font-weight: 600;
-    font-size: .9rem;
-  }
-  .contestant-item .score-preview {
-    font-size: .8rem;
-    color: var(--muted);
-  }
-  .contestant-item .score-preview.has-score {
-    color: var(--green);
-    font-weight: 700;
-  }
+  .contestant-item.current { background: rgba(245,158,11,.15); border-color: var(--accent); }
+  .contestant-item .name { font-weight: 600; }
+  .contestant-item .score-done { font-size: .75rem; }
   .contestant-item .del-btn {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: .8rem;
-    transition: all .15s;
-    flex-shrink: 0;
+    width: 24px; height: 24px; border-radius: 50%; border: none;
+    background: transparent; color: var(--muted); cursor: pointer; font-size: .7rem;
   }
   .contestant-item .del-btn:hover { background: rgba(239,68,68,.2); color: var(--red); }
+  .empty-hint { text-align: center; color: var(--muted); font-size: .8rem; padding: 30px 0; }
 
-  .empty-hint {
-    text-align: center;
-    color: var(--muted);
-    font-size: .8rem;
-    padding: 30px 0;
+  /* Right: current contestant */
+  .detail-panel {
+    background: var(--panel); border-radius: var(--radius); padding: 18px;
+    box-shadow: var(--shadow); min-height: 300px;
   }
+  .detail-panel .placeholder { text-align: center; color: var(--muted); padding: 60px 0; font-size: .9rem; }
+  .detail-panel .current-name { font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .detail-panel .current-type { font-size: .75rem; color: var(--muted); text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+  .detail-panel .final-score { text-align: center; font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+  .detail-panel .final-score .hint { font-size: .65rem; color: var(--muted); font-weight: 400; display: block; }
 
-  /* ===== Right: judge scoring ===== */
-  .score-panel {
-    background: var(--panel);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-    min-height: 300px;
+  .judges-mini {
+    display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 12px;
   }
-  .score-panel .placeholder {
-    text-align: center;
-    color: var(--muted);
-    padding: 60px 0;
-    font-size: .95rem;
+  .judge-mini {
+    text-align: center; background: #0f172a; border-radius: 10px; padding: 10px 6px;
+    border: 2px solid transparent; transition: all .2s;
   }
-  .score-panel .selected-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    text-align: center;
-  }
-  .score-panel .selected-type {
-    font-size: .8rem;
-    color: var(--muted);
-    text-align: center;
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-  .score-panel .final-score {
-    text-align: center;
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--accent);
-    margin-bottom: 12px;
-  }
-  .score-panel .final-score .formula {
-    font-size: .7rem;
-    color: var(--muted);
-    font-weight: 400;
-    display: block;
-  }
+  .judge-mini.scored { border-color: var(--green); }
+  .judge-mini .jlabel { font-size: .65rem; color: var(--muted); margin-bottom: 4px; letter-spacing: 1px; }
+  .judge-mini .jscore { font-size: 1.8rem; font-weight: 700; }
+  .judge-mini .jscore.empty { color: var(--border); font-size: 1rem; }
+  .judge-mini .jstatus { font-size: .6rem; margin-top: 2px; }
+  .judge-mini .jstatus.online { color: var(--green); }
+  .judge-mini .jstatus.offline { color: var(--muted); }
 
-  .judges-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-  .judge-box {
-    text-align: center;
-    background: #0f172a;
-    border-radius: 10px;
-    padding: 12px 8px;
-    border: 2px solid transparent;
-    transition: all .2s;
-  }
-  .judge-box.scored { border-color: var(--accent); }
-  .judge-box .judge-label {
-    font-size: .7rem;
-    color: var(--muted);
-    margin-bottom: 6px;
-    letter-spacing: 1px;
-  }
-  .judge-box input {
-    width: 100%;
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid var(--border);
-    color: var(--text);
-    outline: none;
-    padding: 4px 0;
-    transition: border-color .2s;
-  }
-  .judge-box input:focus { border-color: var(--accent); }
-  .judge-box input.has-val { color: var(--accent); border-color: var(--accent); }
-
-  .btn-row {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+  .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
   .btn {
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    font-size: .85rem;
-    font-weight: 600;
-    transition: all .15s;
+    padding: 9px 18px; border-radius: 10px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); cursor: pointer; font-size: .82rem; font-weight: 600; transition: all .15s;
   }
   .btn:hover { background: rgba(255,255,255,.06); }
   .btn.accent { background: var(--accent); color: #000; border: none; }
-  .btn.accent:hover { filter: brightness(1.1); }
   .btn.danger { border-color: var(--red); color: var(--red); }
-  .btn.danger:hover { background: rgba(239,68,68,.15); }
 
-  /* ===== Ranking table ===== */
+  /* Ranking */
   .ranking-section {
-    background: var(--panel);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
+    background: var(--panel); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
   }
   .ranking-section h3 {
-    font-size: .85rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: .8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
   }
-  .ranking-section h3 .badge {
-    background: var(--accent);
-    color: #000;
-    font-size: .7rem;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-weight: 700;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .9rem;
-  }
-  th, td {
-    padding: 10px 12px;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-  }
-  th {
-    color: var(--muted);
-    font-size: .75rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
-  }
+  .badge { background: var(--accent); color: #000; font-size: .65rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; }
   td.name-col { text-align: left; font-weight: 600; }
-  .rank-badge {
-    display: inline-block;
-    width: 28px; height: 28px;
-    line-height: 28px;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: .85rem;
-  }
   .rank-1 { background: #f59e0b; color: #000; }
   .rank-2 { background: #94a3b8; color: #000; }
   .rank-3 { background: #b45309; color: #fff; }
+  .rank-badge {
+    display: inline-block; width: 26px; height: 26px; line-height: 26px;
+    border-radius: 50%; font-weight: 700; font-size: .8rem;
+  }
   .rank-other { color: var(--muted); }
+  .kept { color: var(--green); }
+  .dropped { text-decoration: line-through; color: var(--red); opacity: .6; }
+  .no-data { text-align: center; padding: 30px; color: var(--muted); font-size: .85rem; }
 
-  .score-breakdown {
-    font-size: .75rem;
-    color: var(--muted);
+  /* QR section */
+  .qr-section {
+    margin-top: 12px; text-align: center;
+    background: var(--panel); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow);
   }
-  .score-breakdown .dropped { text-decoration: line-through; color: var(--red); opacity: .6; }
-  .score-breakdown .kept { color: var(--green); }
+  .qr-section .label { font-size: .75rem; color: var(--muted); margin-bottom: 8px; }
 
-  .no-data {
-    text-align: center;
-    padding: 30px;
-    color: var(--muted);
-    font-size: .85rem;
+  /* Footer */
+  .footer-bar { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset:0; background: rgba(0,0,0,.75);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
   }
-
-  /* ===== Footer ===== */
-  .footer-bar {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-top: 14px;
-    flex-wrap: wrap;
+  .modal-overlay.show { opacity:1; pointer-events:auto; }
+  .modal {
+    background: var(--panel); border-radius: var(--radius); padding: 24px;
+    width: 90%; max-width: 400px; box-shadow: var(--shadow); text-align: center;
   }
+  .modal h3 { margin-bottom: 14px; }
+  .modal input {
+    width: 100%; padding: 12px; border-radius: 10px; border:1px solid var(--border);
+    background: #0f172a; color: var(--text); font-size: 1.2rem; text-align: center;
+    outline: none; letter-spacing: 4px; font-weight: 700;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal .btn-row { margin-top: 16px; }
 
-  /* ===== Responsive ===== */
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
   @media (max-width: 700px) {
     .main { grid-template-columns: 1fr; }
-    .side-panel { max-height: 250px; }
-    .judges-grid { grid-template-columns: repeat(5, 1fr); gap: 6px; }
-    .judge-box input { font-size: 1.2rem; }
-    .judge-box { padding: 8px 4px; }
-    table { font-size: .75rem; }
-    th, td { padding: 6px 4px; }
-  }
-  @media (max-width: 400px) {
-    .judges-grid { grid-template-columns: repeat(3, 1fr); }
+    .side-panel { max-height: 220px; }
+    .judges-mini { grid-template-columns: repeat(5,1fr); gap: 4px; }
+    .judge-mini .jscore { font-size: 1.2rem; }
+    table { font-size: .7rem; }
+    th, td { padding: 5px 3px; }
   }
 </style>
 </head>
@@ -380,7 +191,32 @@
 <div class="app">
   <!-- Header -->
   <div class="header">
-    <h1>🏆 评委打分系统</h1>
+    <h1>🏆 评委打分系统 · 管理端</h1>
+    <div class="room-badge">
+      <span class="status-dot" id="statusDot"></span>
+      房间号：<code id="roomCodeDisplay">----</code>
+      <button onclick="leaveRoom()">退出</button>
+      <button onclick="copyRoomLink()">📋 复制链接</button>
+    </div>
+  </div>
+
+  <!-- Room entry modal -->
+  <div class="modal-overlay show" id="roomModal">
+    <div class="modal">
+      <h3>🏠 创建或加入房间</h3>
+      <div style="margin-bottom:12px;">
+        <button class="tab active" onclick="createRoom()" style="font-size:.85rem;padding:8px 16px;">✨ 创建新房间</button>
+      </div>
+      <div style="color:var(--muted);font-size:.8rem;margin:8px 0;">—— 或加入已有房间 ——</div>
+      <input type="text" id="joinCode" placeholder="输入4位房间号" maxlength="4" style="margin-top:8px;">
+      <div class="btn-row">
+        <button class="btn accent" onclick="joinRoom()">加入房间</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="text-align:center;">
     <div class="tabs" id="tabs">
       <button class="tab active" data-type="dance">💃 舞蹈比赛</button>
       <button class="tab" data-type="recite">🎤 朗诵比赛</button>
@@ -389,129 +225,201 @@
 
   <!-- Main -->
   <div class="main">
-    <!-- Left: contestant list -->
     <div class="side-panel">
       <h3>👥 选手列表</h3>
       <div class="add-row">
-        <input type="text" id="newName" placeholder="输入选手姓名" maxlength="12">
+        <input type="text" id="newName" placeholder="选手姓名" maxlength="12">
         <button id="btnAdd">+ 添加</button>
       </div>
       <div class="contestant-list" id="contestantList">
-        <div class="empty-hint">暂无选手，请先添加</div>
+        <div class="empty-hint">暂无选手</div>
       </div>
     </div>
 
-    <!-- Right: judge scoring -->
-    <div class="score-panel" id="scorePanel">
-      <div class="placeholder">👈 选择左侧选手进行打分</div>
+    <div class="detail-panel" id="detailPanel">
+      <div class="placeholder">👈 选择左侧选手作为当前比赛选手</div>
     </div>
   </div>
 
   <!-- Ranking -->
   <div class="ranking-section">
-    <h3>📊 排名 <span class="badge" id="badgeCount">0 人</span></h3>
-    <div id="rankingTable">
-      <div class="no-data">暂无成绩数据</div>
+    <h3>📊 实时排名 <span class="badge" id="badgeCount">0 人完成</span></h3>
+    <div id="rankingTable"><div class="no-data">暂无成绩数据</div></div>
+  </div>
+
+  <!-- QR & Links -->
+  <div class="qr-section">
+    <div class="label">📱 评委入口 — 将以下链接发给5位评委</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+      <div id="judgeLinks" style="font-size:.8rem;color:var(--muted);">
+        请先创建房间
+      </div>
     </div>
   </div>
 
-  <!-- Footer actions -->
+  <!-- Footer -->
   <div class="footer-bar">
-    <button class="btn" id="btnExport">📋 导出成绩单</button>
-    <button class="btn" id="btnClearAll">🗑️ 清空所有数据</button>
-    <button class="btn" id="btnImport">📥 导入数据</button>
-    <input type="file" id="importFile" accept=".json" style="display:none">
+    <button class="btn" id="btnExport">📋 导出成绩</button>
+    <button class="btn danger" id="btnResetScores">🔄 重置当前比赛</button>
+    <button class="btn danger" id="btnClearAll">🗑️ 清空房间</button>
   </div>
 </div>
 
-<script>
-// ===== State =====
-const STORAGE_KEY = 'judge_scoring_data_v2';
-
-let currentType = 'dance'; // 'dance' | 'recite'
-let selectedId = null;
-
-// Structure: { dance: { contestants: { id: { name, scores: [null,null,null,null,null] } } }, recite: {...} }
-let data = {
-  dance: { contestants: {} },
-  recite: { contestants: {} },
+<!-- Firebase SDK -->
+<script type="module">
+// ==================== FIREBASE CONFIG ====================
+// 替换为你的 Firebase 配置（在 Firebase Console → 项目设置 → 常规 中找到）
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "YOUR_APP_ID"
 };
+// =========================================================
 
-function genId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getDatabase, ref, set, onValue, update, remove, get, child } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// State
+let roomCode = null;
+let currentType = 'dance';
+let currentContestantId = null;
+let judgeOnline = {}; // { judge1: timestamp, ... }
+
+// ==================== Room management ====================
+function genRoomCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-// ===== Persistence =====
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-function loadData() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
-  try {
-    const saved = JSON.parse(raw);
-    if (saved.dance) data.dance = saved.dance;
-    if (saved.recite) data.recite = saved.recite;
-  } catch(e) {}
-}
-
-// ===== Helpers =====
-function getContestants() {
-  return Object.entries(data[currentType].contestants)
-    .map(([id, c]) => ({ id, ...c }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
-}
-
-function calcFinal(scores) {
-  const filled = scores.filter(s => s !== null && s !== undefined && !isNaN(s));
-  if (filled.length < 3) return null; // Need at least 3 scores
-  const sorted = [...filled].sort((a, b) => a - b);
-  const kept = sorted.slice(1, -1); // Remove min and max
-  if (kept.length === 0) {
-    // If just 3 scores, removing min/max leaves 1 — that's correct
-    // If 4 scores, removing min/max leaves 2
-    // If 5 scores, removing min/max leaves 3
-    const mid = sorted.slice(1, Math.max(1, sorted.length - 1));
-    const avg = mid.reduce((a, b) => a + b, 0) / mid.length;
-    return { avg: Math.round(avg * 100) / 100, kept: mid, dropped: [sorted[0], sorted[sorted.length-1]], all: sorted };
-  }
-  const avg = kept.reduce((a, b) => a + b, 0) / kept.length;
-  return { avg: Math.round(avg * 100) / 100, kept, dropped: [sorted[0], sorted[sorted.length-1]], all: sorted };
-}
-
-function getRanked() {
-  const list = [];
-  Object.entries(data[currentType].contestants).forEach(([id, c]) => {
-    const result = calcFinal(c.scores);
-    if (result) list.push({ id, name: c.name, scores: c.scores, result });
+function createRoom() {
+  const code = genRoomCode();
+  const roomRef = ref(db, `rooms/${code}`);
+  get(roomRef).then(snap => {
+    if (snap.exists()) { createRoom(); return; } // Collision, retry
+    set(roomRef, {
+      type: 'dance',
+      currentContestantId: null,
+      createdAt: Date.now(),
+    }).then(() => {
+      enterRoom(code);
+    });
   });
-  list.sort((a, b) => b.result.avg - a.result.avg);
-  return list;
 }
 
-// ===== Render =====
-function renderContestantList() {
-  const container = document.getElementById('contestantList');
-  const list = getContestants();
+function joinRoom() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if (code.length < 4) { alert('请输入4位房间号'); return; }
+  const roomRef = ref(db, `rooms/${code}`);
+  get(roomRef).then(snap => {
+    if (!snap.exists()) { alert('房间不存在，请检查房间号'); return; }
+    enterRoom(code);
+  });
+}
 
-  if (list.length === 0) {
-    container.innerHTML = '<div class="empty-hint">暂无选手，请先添加</div>';
+function enterRoom(code) {
+  roomCode = code;
+  document.getElementById('roomModal').classList.remove('show');
+  document.getElementById('roomCodeDisplay').textContent = code;
+  document.getElementById('statusDot').classList.add('online');
+  // Update type from room
+  const typeRef = ref(db, `rooms/${roomCode}/type`);
+  onValue(typeRef, snap => {
+    if (snap.exists()) {
+      currentType = snap.val();
+      updateTabs();
+    }
+  });
+  updateJudgeLinks();
+  listenContestants();
+  listenCurrent();
+  listenJudgePresence();
+}
+
+function leaveRoom() {
+  if (!roomCode) return;
+  if (!confirm('确定退出房间？')) return;
+  roomCode = null;
+  currentContestantId = null;
+  document.getElementById('roomCodeDisplay').textContent = '----';
+  document.getElementById('statusDot').classList.remove('online');
+  document.getElementById('roomModal').classList.add('show');
+  document.getElementById('contestantList').innerHTML = '<div class="empty-hint">暂无选手</div>';
+  document.getElementById('detailPanel').innerHTML = '<div class="placeholder">👈 选择左侧选手作为当前比赛选手</div>';
+  document.getElementById('rankingTable').innerHTML = '<div class="no-data">暂无成绩数据</div>';
+  document.getElementById('judgeLinks').textContent = '请先创建房间';
+}
+
+function copyRoomLink() {
+  if (!roomCode) return;
+  const baseUrl = window.location.origin + window.location.pathname.replace('index.html', 'judge.html');
+  const text = `🏆 评委打分系统\n房间号：${roomCode}\n评委入口：${baseUrl}?room=${roomCode}\n\n请打开链接，选择你的评委编号（1-5）`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('✅ 已复制！发给评委即可。');
+  }).catch(() => {
+    // Fallback: show text
+    prompt('请手动复制以下内容：', text);
+  });
+}
+
+// ==================== Firebase listeners ====================
+function listenContestants() {
+  const contestantRef = ref(db, `rooms/${roomCode}/contestants`);
+  onValue(contestantRef, snap => {
+    renderContestantList(snap.val() || {});
+    renderRanking(snap.val() || {});
+    renderDetailPanel();
+  });
+}
+
+function listenCurrent() {
+  const currentRef = ref(db, `rooms/${roomCode}/currentContestantId`);
+  onValue(currentRef, snap => {
+    currentContestantId = snap.val() || null;
+    renderContestantList(null); // Re-render to update highlighting
+    renderDetailPanel();
+  });
+}
+
+function listenJudgePresence() {
+  const presenceRef = ref(db, `rooms/${roomCode}/judgePresence`);
+  onValue(presenceRef, snap => {
+    judgeOnline = snap.val() || {};
+    renderDetailPanel();
+  });
+}
+
+// ==================== Render ====================
+function renderContestantList(data) {
+  const container = document.getElementById('contestantList');
+  let contestants = data;
+  if (!contestants) {
+    // Use cached data from listener
     return;
   }
 
-  container.innerHTML = list.map(c => {
-    const result = calcFinal(c.scores);
-    const scoreText = result ? `${result.avg.toFixed(2)} 分` : '未完成';
-    const scoreClass = result ? 'has-score' : '';
-    const selClass = c.id === selectedId ? ' selected' : '';
+  const entries = Object.entries(contestants).sort((a, b) => a[1].createdAt - b[1].createdAt);
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div class="empty-hint">暂无选手</div>';
+    return;
+  }
+
+  container.innerHTML = entries.map(([id, c]) => {
+    const isCurrent = id === currentContestantId;
+    const scoreCount = Object.values(c.scores || {}).filter(s => s !== null && s !== undefined).length;
+    const doneIcon = scoreCount >= 3 ? ' ✅' : scoreCount > 0 ? ` (${scoreCount}/5)` : '';
     return `
-      <div class="contestant-item${selClass}" data-id="${c.id}">
+      <div class="contestant-item${isCurrent ? ' current' : ''}" data-id="${id}">
+        <span><span class="name">${esc(c.name)}</span><span class="score-done">${doneIcon}</span></span>
         <span>
-          <span class="name">${escHtml(c.name)}</span>
-          <span class="score-preview ${scoreClass}"> · ${scoreText}</span>
+          <button class="del-btn" data-del="${id}" title="删除">✕</button>
         </span>
-        <button class="del-btn" data-del="${c.id}" title="删除">✕</button>
       </div>`;
   }).join('');
 
@@ -519,7 +427,7 @@ function renderContestantList() {
   container.querySelectorAll('.contestant-item').forEach(el => {
     el.addEventListener('click', (e) => {
       if (e.target.closest('.del-btn')) return;
-      selectContestant(el.dataset.id);
+      setCurrentContestant(el.dataset.id);
     });
   });
   container.querySelectorAll('.del-btn').forEach(btn => {
@@ -530,307 +438,291 @@ function renderContestantList() {
   });
 }
 
-function renderScorePanel() {
-  const panel = document.getElementById('scorePanel');
-  if (!selectedId) {
-    panel.innerHTML = '<div class="placeholder">👈 选择左侧选手进行打分</div>';
+function calcFinal(scoresObj) {
+  if (!scoresObj) return null;
+  const arr = Object.values(scoresObj).filter(s => s !== null && s !== undefined && !isNaN(s));
+  if (arr.length < 3) return null;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const dropped = [sorted[0], sorted[sorted.length - 1]];
+  const kept = sorted.slice(1, -1);
+  if (kept.length === 0) {
+    // Handle edge case with exactly 3 values (remove min/max leaves 1)
+    const mid = sorted.slice(1, Math.max(1, sorted.length - 1));
+    const avg = mid.reduce((a, b) => a + b, 0) / mid.length;
+    return { avg: Math.round(avg * 100) / 100, kept: mid, dropped };
+  }
+  const avg = kept.reduce((a, b) => a + b, 0) / kept.length;
+  return { avg: Math.round(avg * 100) / 100, kept, dropped, all: sorted };
+}
+
+function renderDetailPanel() {
+  const panel = document.getElementById('detailPanel');
+  if (!currentContestantId || !roomCode) {
+    panel.innerHTML = '<div class="placeholder">👈 选择左侧选手作为当前比赛选手</div>';
     return;
   }
 
-  const c = data[currentType].contestants[selectedId];
-  if (!c) {
-    selectedId = null;
-    renderScorePanel();
-    return;
-  }
+  const contestantRef = ref(db, `rooms/${roomCode}/contestants/${currentContestantId}`);
+  get(contestantRef).then(snap => {
+    const c = snap.val();
+    if (!c) {
+      panel.innerHTML = '<div class="placeholder">选手不存在</div>';
+      return;
+    }
 
-  const typeLabel = currentType === 'dance' ? '💃 舞蹈比赛' : '🎤 朗诵比赛';
-  const result = calcFinal(c.scores);
+    const scores = c.scores || {};
+    const result = calcFinal(scores);
+    const typeLabel = currentType === 'dance' ? '💃 舞蹈比赛' : '🎤 朗诵比赛';
 
-  panel.innerHTML = `
-    <div class="selected-name">${escHtml(c.name)}</div>
-    <div class="selected-type">${typeLabel}</div>
-    ${result ? `<div class="final-score">
-      ${result.avg.toFixed(2)}<span class="formula">最终得分（去掉最高 ${result.dropped[1]} 分、最低 ${result.dropped[0]} 分）</span>
-    </div>` : '<div class="final-score" style="color:var(--muted);font-size:1rem;">至少需要3位评委打分</div>'}
-    <div class="judges-grid">
-      ${[1,2,3,4,5].map(i => {
-        const val = c.scores[i-1];
-        const hasVal = val !== null && val !== undefined;
-        return `
-          <div class="judge-box${hasVal ? ' scored' : ''}">
-            <div class="judge-label">评委 ${i}</div>
-            <input type="number"
-                   id="judge${i}"
-                   value="${hasVal ? val : ''}"
-                   placeholder="-"
-                   min="0" max="100" step="0.1"
-                   class="${hasVal ? 'has-val' : ''}"
-                   data-judge="${i}">
-            ${hasVal ? `<div style="font-size:.65rem;color:var(--muted);margin-top:2px;">${val}</div>` : ''}
-          </div>`;
-      }).join('')}
-    </div>
-    <div class="btn-row">
-      <button class="btn accent" id="btnQuick100">⚡ 满分 (100)</button>
-      <button class="btn" id="btnClearScores">清空分数</button>
-    </div>
-  `;
-
-  // Judge input handlers
-  panel.querySelectorAll('input[data-judge]').forEach(input => {
-    input.addEventListener('input', () => {
-      const idx = parseInt(input.dataset.judge) - 1;
-      const val = parseFloat(input.value);
-      if (!isNaN(val) && val >= 0 && val <= 100) {
-        c.scores[idx] = Math.round(val * 10) / 10;
-      } else if (input.value === '' || input.value === '-') {
-        c.scores[idx] = null;
-      }
-      saveData();
-      renderAll(); // Re-render everything to update ranking
-    });
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const nextIdx = parseInt(input.dataset.judge);
-        if (nextIdx < 5) {
-          const nextInput = panel.querySelector(`#judge${nextIdx + 1}`);
-          if (nextInput) nextInput.focus();
-        }
-      }
-    });
-  });
-
-  // Quick 100 button
-  document.getElementById('btnQuick100')?.addEventListener('click', () => {
-    c.scores = [100, 100, 100, 100, 100];
-    saveData();
-    renderAll();
-  });
-
-  // Clear scores
-  document.getElementById('btnClearScores')?.addEventListener('click', () => {
-    c.scores = [null, null, null, null, null];
-    saveData();
-    renderAll();
+    panel.innerHTML = `
+      <div class="current-name">${esc(c.name)}</div>
+      <div class="current-type">${typeLabel}</div>
+      ${result ? `
+        <div class="final-score">
+          ${result.avg.toFixed(2)}
+          <span class="hint">最终得分（去掉最高 ${result.dropped[1].toFixed(1)}、最低 ${result.dropped[0].toFixed(1)}）</span>
+        </div>
+      ` : `
+        <div class="final-score" style="color:var(--muted);font-size:1rem;">等待评委打分中...</div>
+      `}
+      <div class="judges-mini">
+        ${[1,2,3,4,5].map(i => {
+          const key = `judge${i}`;
+          const val = scores[key];
+          const hasVal = val !== null && val !== undefined;
+          const isOnline = judgeOnline[key] && (Date.now() - judgeOnline[key] < 60000);
+          return `
+            <div class="judge-mini${hasVal ? ' scored' : ''}">
+              <div class="jlabel">评委 ${i}</div>
+              <div class="jscore${hasVal ? '' : ' empty'}">${hasVal ? val.toFixed(1) : '-'}</div>
+              <div class="jstatus ${isOnline ? 'online' : 'offline'}">${isOnline ? '在线' : hasVal ? '已打分' : '离线'}</div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn accent" onclick="nextContestant()">▶ 下一个选手</button>
+        <button class="btn" onclick="clearCurrentScores()">清空当前分数</button>
+      </div>
+    `;
   });
 }
 
-function renderRanking() {
+function renderRanking(data) {
   const container = document.getElementById('rankingTable');
   const badge = document.getElementById('badgeCount');
-  const ranked = getRanked();
+  if (!data) return;
+
+  const ranked = Object.entries(data)
+    .map(([id, c]) => {
+      const result = calcFinal(c.scores || {});
+      return result ? { id, name: c.name, scores: c.scores || {}, result } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.result.avg - a.result.avg);
 
   badge.textContent = `${ranked.length} 人`;
 
   if (ranked.length === 0) {
-    container.innerHTML = '<div class="no-data">暂无成绩数据 — 至少需要3位评委为选手打分</div>';
+    container.innerHTML = '<div class="no-data">暂无完整成绩（需至少3位评委打分）</div>';
     return;
   }
-
-  // Count how many contestants have at least partial scores (for total count)
-  const totalWithScores = Object.values(data[currentType].contestants)
-    .filter(c => c.scores.some(s => s !== null && s !== undefined)).length;
 
   container.innerHTML = `
     <table>
       <thead>
-        <tr>
-          <th>排名</th>
-          <th>选手</th>
-          <th>评委1</th>
-          <th>评委2</th>
-          <th>评委3</th>
-          <th>评委4</th>
-          <th>评委5</th>
-          <th>最终得分</th>
-          <th>明细</th>
-        </tr>
+        <tr><th>排名</th><th>选手</th><th>评委1</th><th>评委2</th><th>评委3</th><th>评委4</th><th>评委5</th><th>最终得分</th></tr>
       </thead>
       <tbody>
         ${ranked.map((r, i) => {
           const rank = i + 1;
-          const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
-          const keptSet = new Set(r.result.kept);
+          const rc = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
           const droppedSet = new Set(r.result.dropped);
-          return `
-            <tr>
-              <td><span class="rank-badge ${rankClass}">${rank}</span></td>
-              <td class="name-col">${escHtml(r.name)}</td>
-              ${r.scores.map((s, idx) => {
-                const val = s !== null && s !== undefined ? s.toFixed(1) : '-';
-                const isKept = keptSet.has(s);
-                const isDropped = droppedSet.has(s);
-                let cls = '';
-                if (isDropped) cls = 'dropped';
-                else if (isKept && r.result.all.length >= 3) cls = 'kept';
-                return `<td class="score-breakdown"><span class="${cls}">${val}</span></td>`;
-              }).join('')}
-              <td style="font-weight:700;color:var(--accent);font-size:1.05rem;">${r.result.avg.toFixed(2)}</td>
-              <td class="score-breakdown" style="font-size:.7rem;">
-                去掉 ${r.result.dropped.map(d => d.toFixed(1)).join('、')}<br>
-                ${r.result.kept.map(k => k.toFixed(1)).join(' + ')} / ${r.result.kept.length} = ${r.result.avg.toFixed(2)}
-              </td>
-            </tr>`;
+          const keptSet = new Set(r.result.kept);
+          return `<tr>
+            <td><span class="rank-badge ${rc}">${rank}</span></td>
+            <td class="name-col">${esc(r.name)}</td>
+            ${[1,2,3,4,5].map(i => {
+              const key = `judge${i}`;
+              const val = r.scores[key];
+              const v = val !== null && val !== undefined ? val.toFixed(1) : '-';
+              const cls = droppedSet.has(val) ? 'dropped' : keptSet.has(val) ? 'kept' : '';
+              return `<td class="${cls}">${v}</td>`;
+            }).join('')}
+            <td style="font-weight:800;color:var(--accent);">${r.result.avg.toFixed(2)}</td>
+          </tr>`;
         }).join('')}
       </tbody>
-    </table>
+    </table>`;
+}
+
+function updateTabs() {
+  document.querySelectorAll('#tabs .tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.type === currentType);
+  });
+}
+
+function updateJudgeLinks() {
+  if (!roomCode) return;
+  const baseUrl = window.location.origin + window.location.pathname.replace('index.html', 'judge.html');
+  const links = [1,2,3,4,5].map(i =>
+    `<a href="${baseUrl}?room=${roomCode}&judge=${i}" target="_blank" style="color:var(--accent);text-decoration:none;margin:0 4px;">评委${i}</a>`
+  ).join(' | ');
+  document.getElementById('judgeLinks').innerHTML = `
+    房间号：<code style="color:var(--accent);font-weight:700;">${roomCode}</code> &nbsp;|&nbsp;
+    ${links}<br>
+    <span style="font-size:.7rem;color:var(--muted);">
+      评委入口：${baseUrl}?room=${roomCode} （评委打开后选择编号）
+    </span>
   `;
 }
 
-function renderAll() {
-  renderContestantList();
-  renderScorePanel();
-  renderRanking();
+// ==================== Actions ====================
+function setCurrentContestant(id) {
+  if (!roomCode) return;
+  set(ref(db, `rooms/${roomCode}/currentContestantId`), id);
 }
 
-function escHtml(str) {
-  const el = document.createElement('span');
-  el.textContent = str;
-  return el.innerHTML;
-}
-
-// ===== Actions =====
-function selectContestant(id) {
-  selectedId = id;
-  renderAll();
-  // Focus first empty judge input
-  setTimeout(() => {
-    const firstEmpty = document.querySelector('.score-panel input[data-judge]:not(.has-val)');
-    if (firstEmpty) firstEmpty.focus();
-  }, 100);
+function nextContestant() {
+  if (!roomCode) return;
+  const contestantRef = ref(db, `rooms/${roomCode}/contestants`);
+  get(contestantRef).then(snap => {
+    const data = snap.val() || {};
+    const ids = Object.keys(data).sort((a, b) => data[a].createdAt - data[b].createdAt);
+    const curIdx = ids.indexOf(currentContestantId);
+    const nextId = curIdx >= 0 && curIdx < ids.length - 1 ? ids[curIdx + 1] : ids[0];
+    if (nextId) setCurrentContestant(nextId);
+  });
 }
 
 function addContestant() {
+  if (!roomCode) { alert('请先创建或加入房间'); return; }
   const input = document.getElementById('newName');
   const name = input.value.trim();
   if (!name) return;
-  const id = genId();
-  data[currentType].contestants[id] = {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const contestantRef = ref(db, `rooms/${roomCode}/contestants/${id}`);
+  set(contestantRef, {
     name,
-    scores: [null, null, null, null, null],
-  };
-  input.value = '';
-  selectedId = id;
-  saveData();
-  renderAll();
-  input.focus();
+    createdAt: Date.now(),
+    scores: { judge1: null, judge2: null, judge3: null, judge4: null, judge5: null }
+  }).then(() => {
+    input.value = '';
+    input.focus();
+  });
 }
 
 function deleteContestant(id) {
-  if (!confirm(`确定删除选手「${data[currentType].contestants[id]?.name}」？`)) return;
-  delete data[currentType].contestants[id];
-  if (selectedId === id) selectedId = null;
-  saveData();
-  renderAll();
+  if (!roomCode) return;
+  if (!confirm('确定删除这名选手？')) return;
+  remove(ref(db, `rooms/${roomCode}/contestants/${id}`));
+  if (currentContestantId === id) {
+    set(ref(db, `rooms/${roomCode}/currentContestantId`), null);
+  }
+}
+
+function clearCurrentScores() {
+  if (!roomCode || !currentContestantId) return;
+  if (!confirm('清空当前选手的所有评委分数？')) return;
+  update(ref(db, `rooms/${roomCode}/contestants/${currentContestantId}`), {
+    scores: { judge1: null, judge2: null, judge3: null, judge4: null, judge5: null }
+  });
+}
+
+function resetCurrentType() {
+  if (!roomCode) return;
+  if (!confirm('确定重置当前比赛所有分数？选手名单保留。')) return;
+  const contestantRef = ref(db, `rooms/${roomCode}/contestants`);
+  get(contestantRef).then(snap => {
+    const data = snap.val() || {};
+    const updates = {};
+    Object.keys(data).forEach(id => {
+      updates[`${id}/scores`] = { judge1: null, judge2: null, judge3: null, judge4: null, judge5: null };
+    });
+    update(contestantRef, updates);
+  });
 }
 
 function clearAll() {
-  if (!confirm('确定清空当前比赛所有选手和成绩？此操作不可恢复！')) return;
-  data[currentType].contestants = {};
-  selectedId = null;
-  saveData();
-  renderAll();
+  if (!roomCode) return;
+  if (!confirm('⚠️ 确定清空整个房间的所有数据？此操作不可恢复！')) return;
+  remove(ref(db, `rooms/${roomCode}`));
+  roomCode = null;
+  currentContestantId = null;
+  document.getElementById('roomModal').classList.add('show');
+  document.getElementById('roomCodeDisplay').textContent = '----';
 }
 
 function exportData() {
-  const ranked = getRanked();
-  if (ranked.length === 0) { alert('当前没有可导出的成绩数据'); return; }
+  if (!roomCode) return;
+  const contestantRef = ref(db, `rooms/${roomCode}/contestants`);
+  get(contestantRef).then(snap => {
+    const data = snap.val() || {};
+    const ranked = Object.entries(data)
+      .map(([id, c]) => {
+        const result = calcFinal(c.scores || {});
+        return result ? { name: c.name, scores: c.scores, result } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.result.avg - a.result.avg);
 
-  const typeLabel = currentType === 'dance' ? '舞蹈比赛' : '朗诵比赛';
-  let text = `══════════════════════════\n`;
-  text += `  🏆 ${typeLabel} — 成绩排名\n`;
-  text += `  导出时间：${new Date().toLocaleString()}\n`;
-  text += `══════════════════════════\n\n`;
-
-  ranked.forEach((r, i) => {
-    text += `${i+1}. ${r.name} — ${r.result.avg.toFixed(2)} 分\n`;
-    text += `   评委打分：${r.scores.map(s => s != null ? s.toFixed(1) : '-').join(' | ')}\n`;
-    text += `   计分：去掉最高 ${r.result.dropped[1].toFixed(1)}、最低 ${r.result.dropped[0].toFixed(1)}，取 ${r.result.kept.map(k => k.toFixed(1)).join('、')} 平均\n\n`;
+    const typeLabel = currentType === 'dance' ? '舞蹈比赛' : '朗诵比赛';
+    let text = `══════════════════════════\n  🏆 ${typeLabel} — 成绩排名\n  房间号：${roomCode}\n  时间：${new Date().toLocaleString()}\n══════════════════════════\n\n`;
+    ranked.forEach((r, i) => {
+      text += `${i+1}. ${r.name} — ${r.result.avg.toFixed(2)} 分\n`;
+      text += `   评委：${[1,2,3,4,5].map(j => {
+        const v = r.scores[`judge${j}`];
+        return v != null ? v.toFixed(1) : '-';
+      }).join(' | ')}\n`;
+      text += `   去掉最高${r.result.dropped[1].toFixed(1)}、最低${r.result.dropped[0].toFixed(1)}，取中间平均\n\n`;
+    });
+    navigator.clipboard.writeText(text).then(() => alert('✅ 成绩已复制！')).catch(() => {
+      const blob = new Blob([text], {type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${typeLabel}_成绩.txt`;
+      a.click();
+    });
   });
-
-  // Copy to clipboard
-  navigator.clipboard.writeText(text).then(() => {
-    alert('✅ 成绩单已复制到剪贴板！可粘贴到微信/文档中。');
-  }).catch(() => {
-    // Fallback: download as file
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${typeLabel}_成绩单.txt`;
-    a.click();
-  });
 }
 
-function importData() {
-  document.getElementById('importFile').click();
-}
-
-function handleImport(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const imported = JSON.parse(reader.result);
-      if (imported.dance && imported.recite) {
-        if (!confirm('导入将覆盖当前所有数据，确定继续？')) return;
-        data = imported;
-        selectedId = null;
-        saveData();
-        renderAll();
-        alert('✅ 数据导入成功！');
-      } else {
-        alert('❌ 文件格式不正确');
-      }
-    } catch(err) {
-      alert('❌ 无法解析文件，请确认是 JSON 格式');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-}
-
-// ===== Event listeners =====
+// ==================== Event listeners ====================
 document.getElementById('tabs').addEventListener('click', (e) => {
   const tab = e.target.closest('.tab');
-  if (!tab) return;
+  if (!tab || !roomCode) return;
   currentType = tab.dataset.type;
-  selectedId = null;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  tab.classList.add('active');
-  renderAll();
+  set(ref(db, `rooms/${roomCode}/type`), currentType);
+  updateTabs();
 });
 
 document.getElementById('btnAdd').addEventListener('click', addContestant);
 document.getElementById('newName').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') addContestant();
 });
-
 document.getElementById('btnExport').addEventListener('click', exportData);
+document.getElementById('btnResetScores').addEventListener('click', resetCurrentType);
 document.getElementById('btnClearAll').addEventListener('click', clearAll);
-document.getElementById('btnImport').addEventListener('click', importData);
-document.getElementById('importFile').addEventListener('change', handleImport);
 
-// Click outside side panel to deselect
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.contestant-item') && !e.target.closest('.side-panel button')) {
-    // Don't deselect — keep selection for scoring
-  }
-});
-
-// ===== Keyboard: Ctrl+S to export =====
+// Keyboard: Ctrl+S to export
 document.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    exportData();
-  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); exportData(); }
+  if (e.key === 'ArrowRight' && e.ctrlKey) { e.preventDefault(); nextContestant(); }
 });
 
-// ===== Init =====
-loadData();
-renderAll();
-</script>
+// ==================== Auto-room from URL ====================
+const urlParams = new URLSearchParams(window.location.search);
+const urlRoom = urlParams.get('room');
+if (urlRoom) {
+  document.getElementById('joinCode').value = urlRoom;
+  setTimeout(() => {
+    joinRoom();
+  }, 500);
+}
 
+function esc(s) {
+  const el = document.createElement('span');
+  el.textContent = s;
+  return el.innerHTML;
+}
+</script>
 </body>
 </html>
