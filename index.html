@@ -195,8 +195,8 @@
     <div class="room-badge">
       <span class="status-dot" id="statusDot"></span>
       房间号：<code id="roomCodeDisplay">----</code>
-      <button onclick="leaveRoom()">退出</button>
-      <button onclick="copyRoomLink()">📋 复制链接</button>
+      <button id="btnLeaveRoom">退出</button>
+      <button id="btnCopyLink">📋 复制链接</button>
     </div>
   </div>
 
@@ -205,12 +205,12 @@
     <div class="modal">
       <h3>🏠 创建或加入房间</h3>
       <div style="margin-bottom:12px;">
-        <button class="tab active" onclick="createRoom()" style="font-size:.85rem;padding:8px 16px;">✨ 创建新房间</button>
+        <button class="tab active" id="btnCreateRoom" style="font-size:.85rem;padding:8px 16px;">✨ 创建新房间</button>
       </div>
       <div style="color:var(--muted);font-size:.8rem;margin:8px 0;">—— 或加入已有房间 ——</div>
       <input type="text" id="joinCode" placeholder="输入4位房间号" maxlength="4" style="margin-top:8px;">
       <div class="btn-row">
-        <button class="btn accent" onclick="joinRoom()">加入房间</button>
+        <button class="btn accent" id="btnJoinRoom">加入房间</button>
       </div>
     </div>
   </div>
@@ -500,10 +500,17 @@ function renderDetailPanel() {
         }).join('')}
       </div>
       <div class="btn-row">
-        <button class="btn accent" onclick="nextContestant()">▶ 下一个选手</button>
-        <button class="btn" onclick="clearCurrentScores()">清空当前分数</button>
+        <button class="btn accent" id="btnNextContestant">▶ 下一个选手</button>
+        <button class="btn" id="btnClearCurrentScores">清空当前分数</button>
       </div>
     `;
+    // Add event listeners for dynamic buttons
+    setTimeout(() => {
+      const btnNext = panel.querySelector('#btnNextContestant');
+      const btnClear = panel.querySelector('#btnClearCurrentScores');
+      if (btnNext) btnNext.addEventListener('click', nextContestant);
+      if (btnClear) btnClear.addEventListener('click', clearCurrentScores);
+    }, 0);
   });
 }
 
@@ -701,6 +708,12 @@ document.getElementById('newName').addEventListener('keydown', (e) => {
 document.getElementById('btnExport').addEventListener('click', exportData);
 document.getElementById('btnResetScores').addEventListener('click', resetCurrentType);
 document.getElementById('btnClearAll').addEventListener('click', clearAll);
+
+// Room modal buttons
+document.getElementById('btnCreateRoom').addEventListener('click', createRoom);
+document.getElementById('btnJoinRoom').addEventListener('click', joinRoom);
+document.getElementById('btnLeaveRoom').addEventListener('click', leaveRoom);
+document.getElementById('btnCopyLink').addEventListener('click', copyRoomLink);
 
 // Keyboard: Ctrl+S to export
 document.addEventListener('keydown', (e) => {

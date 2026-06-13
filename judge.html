@@ -197,7 +197,7 @@
     <div class="top-bar">
       <span class="judge-badge" id="judgeBadge">评委 1</span>
       <span class="room-badge" id="roomBadge">房间 ----</span>
-      <button style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:20px;font-size:.7rem;cursor:pointer;" onclick="goBack()">退出</button>
+      <button id="btnJudgeGoBack" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:20px;font-size:.7rem;cursor:pointer;">退出</button>
     </div>
 
     <div class="status-line" id="statusLine">连接中...</div>
@@ -260,7 +260,7 @@ const firebaseConfig = {
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getDatabase, ref, onValue, set, get, update } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
-import { onDisconnected } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+import { onDisconnect } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
@@ -463,6 +463,7 @@ document.getElementById('btnSubmit').addEventListener('click', submitScore);
 document.getElementById('scoreInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') submitScore();
 });
+document.getElementById('btnJudgeGoBack').addEventListener('click', goBack);
 
 // Quick score buttons
 document.querySelectorAll('.quick-btn').forEach(btn => {
