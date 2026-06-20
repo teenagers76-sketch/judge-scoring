@@ -449,10 +449,10 @@ function calcFinal(scoresObj) {
     // Handle edge case with exactly 3 values (remove min/max leaves 1)
     const mid = sorted.slice(1, Math.max(1, sorted.length - 1));
     const avg = mid.reduce((a, b) => a + b, 0) / mid.length;
-    return { avg: Math.round(avg * 100) / 100, kept: mid, dropped };
+    return { avg: Math.round(avg * 1000) / 1000, kept: mid, dropped };
   }
   const avg = kept.reduce((a, b) => a + b, 0) / kept.length;
-  return { avg: Math.round(avg * 100) / 100, kept, dropped, all: sorted };
+  return { avg: Math.round(avg * 1000) / 1000, kept, dropped, all: sorted };
 }
 
 function renderDetailPanel() {
@@ -479,7 +479,7 @@ function renderDetailPanel() {
       <div class="current-type">${typeLabel}</div>
       ${result ? `
         <div class="final-score">
-          ${result.avg.toFixed(2)}
+          ${result.avg.toFixed(3)}
           <span class="hint">最终得分（去掉最高 ${result.dropped[1].toFixed(1)}、最低 ${result.dropped[0].toFixed(1)}）</span>
         </div>
       ` : `
@@ -555,7 +555,7 @@ function renderRanking(data) {
               const cls = droppedSet.has(val) ? 'dropped' : keptSet.has(val) ? 'kept' : '';
               return `<td class="${cls}">${v}</td>`;
             }).join('')}
-            <td style="font-weight:800;color:var(--accent);">${r.result.avg.toFixed(2)}</td>
+            <td style="font-weight:800;color:var(--accent);">${r.result.avg.toFixed(3)}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -675,7 +675,7 @@ function exportData() {
     const typeLabel = currentType === 'dance' ? '舞蹈比赛' : '朗诵比赛';
     let text = `══════════════════════════\n  🏆 ${typeLabel} — 成绩排名\n  房间号：${roomCode}\n  时间：${new Date().toLocaleString()}\n══════════════════════════\n\n`;
     ranked.forEach((r, i) => {
-      text += `${i+1}. ${r.name} — ${r.result.avg.toFixed(2)} 分\n`;
+      text += `${i+1}. ${r.name} — ${r.result.avg.toFixed(3)} 分\n`;
       text += `   评委：${[1,2,3,4,5].map(j => {
         const v = r.scores[`judge${j}`];
         return v != null ? v.toFixed(1) : '-';

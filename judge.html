@@ -401,7 +401,7 @@ function renderCurrentContestant() {
     <div class="c-name">${esc(c.name)}</div>
     <div class="c-type">${typeLabel}</div>
     <div class="my-score-label">我的打分</div>
-    <div class="my-score-display${hasScore ? '' : ' empty'}">${hasScore ? myScore.toFixed(1) : '未打分'}</div>
+    <div class="my-score-display${hasScore ? '' : ' empty'}">${hasScore ? myScore.toFixed(3) : '未打分'}</div>
   `;
 
   document.getElementById('scoreInputArea').style.opacity = '1';
@@ -430,7 +430,7 @@ function renderHistory() {
     return `
       <div class="history-item" style="${isCurrent ? 'background:rgba(245,158,11,.08);border-radius:6px;padding:6px 8px;' : ''}">
         <span class="h-name">${isCurrent ? '▶ ' : ''}${esc(c.name)}</span>
-        <span class="h-score">${c.scores[myKey].toFixed(1)} 分</span>
+        <span class="h-score">${c.scores[myKey].toFixed(3)} 分</span>
       </div>`;
   }).join('');
 }
@@ -447,11 +447,11 @@ function submitScore() {
   if (isNaN(val)) { alert('请输入有效数字'); return; }
   if (val < 0) val = 0;
   if (val > 100) val = 100;
-  val = Math.round(val * 10) / 10;
+  val = Math.round(val * 1000) / 1000;
 
   const scoreRef = ref(db, `rooms/${roomCode}/contestants/${currentContestantId}/scores/judge${judgeNum}`);
   set(scoreRef, val).then(() => {
-    showToast(`✅ ${val.toFixed(1)} 分 已提交`);
+    showToast(`✅ ${val.toFixed(3)} 分 已提交`);
     input.value = '';
     input.focus();
   }).catch(() => {
